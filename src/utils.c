@@ -52,8 +52,10 @@ int CLInput() {
             INV_semicolons = 0;
         // To check if only semicolons is given as input
     }
-    if (INV_semicolons)
+    if (INV_semicolons) {
         printf("Invalid Input, ; is not a command\n");
+        return 0;
+    }
 
     // separating the different commands
     char* token = strtok(normalized_input, ";");
