@@ -19,37 +19,18 @@ int ChangeDirectory(char* path) {
 
 // a helper function and also used in *pwd*
 void CurrentDirectory(int w_redirect, char* write_file) {
-    int fd = 0, save_stdout;
-    if (w_redirect == 1) {
-        save_stdout = Write_Redirect(&fd, write_file);
-    } else if (w_redirect == 2) {
-        save_stdout = Append_Redirect(&fd, write_file);
-    }
-
     char cur_dir[MAX_LIMIT];
     getcwd(cur_dir, MAX_LIMIT);
     printf("%s\n", cur_dir);
 
-    // making the fd of STDOUT to 1 again if it has changed
-    Return_To_STDOUT(save_stdout, fd);
     return;
 }
 
 // function to implement echo
 void Echo(char* args[], int w_redirect, char* write_file) {
-    int fd = 0, save_stdout;
-    if (w_redirect == 1) {
-        save_stdout = Write_Redirect(&fd, write_file);
-    } else if (w_redirect == 2) {
-        save_stdout = Append_Redirect(&fd, write_file);
-    }
-
     for (int i = 1; args[i] != NULL; i++)
         printf("%s ", args[i]);
     printf("\n");
-
-    // making the fd of STDOUT to 1 again if it has changed
-    Return_To_STDOUT(save_stdout, fd);
 
     return;
 }
@@ -227,7 +208,12 @@ int Append_Redirect(int* fd, char* write_file) {
         return -1;
     }
     int save_stdout = dup(STDOUT_FILENO);
-    dup2(*fd, STDOUT_FILENO);
+    if (save_stdout < 0)
+        perror("Error ");
+    int return_val = dup2(*fd, STDOUT_FILENO);
+    if (return_val < 0)
+        perror("Error");
+
     return save_stdout;
 }
 
@@ -238,14 +224,21 @@ int Read_Redirect(int* fd, char* read_file) {
         return -1;
     }
     int save_stdin = dup(STDIN_FILENO);
-    dup2(*fd, STDIN_FILENO);
+    if (save_stdin < 0)
+        perror("Error ");
+    int return_val = dup2(*fd, STDIN_FILENO);
+    if (return_val < 0)
+        perror("Error");
+
     return save_stdin;
 }
 
 void Return_To_STDIN(int save_stdin, int fd) {
     if (fd > 0) {
         close(fd);
-        dup2(save_stdin, STDIN_FILENO);
+        int return_val = dup2(save_stdin, STDIN_FILENO);
+        if (return_val < 0)
+            perror("Error");
         return;
     }
 }
@@ -253,7 +246,9 @@ void Return_To_STDIN(int save_stdin, int fd) {
 void Return_To_STDOUT(int save_stdout, int fd) {
     if (fd > 0) {
         close(fd);
-        dup2(save_stdout, STDOUT_FILENO);
+        int return_val = dup2(save_stdout, STDOUT_FILENO);
+        if (return_val < 0)
+            perror("Error");
         return;
     }
 }

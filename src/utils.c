@@ -69,6 +69,7 @@ int CLInput() {
     // executing each command recieved in an input
     for (int i = 0; i < num_cmd; i++) {
         return_val = exec(cmd[i]);
+
         // checking for the exit command
         if (return_val == -1)
             return -1;
@@ -123,6 +124,16 @@ int exec(char* cmd) {
     args[w_file - 1] = NULL;
     args[r_file - 1] = NULL;
 
+    // to add support to redirection (input/output)
+    int fd_out = 0, save_stdout, fd_in = 0, save_stdin;
+    if (w_redirect == 1) {
+        save_stdout = Write_Redirect(&fd_out, write_file);
+    } else if (w_redirect == 2) {
+        save_stdout = Append_Redirect(&fd_out, write_file);
+    }
+    if (r_redirect == 1)
+        save_stdin = Read_Redirect(&fd_in, read_file);
+
     // checking for various commands
     if (!strcmp(args[0], "exit")) {
         printf("\033[0;35mBye!\033[0m\n");
@@ -132,9 +143,13 @@ int exec(char* cmd) {
         token_cmd = strtok(NULL, " ");
         if (token_cmd == NULL)
             ChangeDirectory("~");
-        else if (!strcmp(token_cmd, "<"))
+        else if (!strcmp(token_cmd, "<") || !strcmp(token_cmd, ">") || !strcmp(token_cmd, ">>")) {
             ChangeDirectory("~");
-        else
+            token_cmd = strtok(NULL, " ");
+            int fd = open(token_cmd, O_RDONLY | O_CREAT, 0644);
+            if (fd == -1)
+                printf("Error: file couldn't be created\n");
+        } else
             ChangeDirectory(token_cmd);
     } else if (!strcmp(args[0], "echo")) {
         Echo(args, w_redirect, write_file);
@@ -164,6 +179,10 @@ int exec(char* cmd) {
     } else {
         Run_FG(args, w_redirect, r_redirect, write_file, read_file);
     }
+
+    // making the fd of STDOUT to 1, STDIN to 0, if it has changed
+    Return_To_STDOUT(save_stdout, fd_out);
+    Return_To_STDIN(save_stdin, fd_in);
 
     return 0;
 }

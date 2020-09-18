@@ -21,16 +21,6 @@ void AddProcess(char* name, int pid) {
 
 // Funtion to run a process
 void Run_FG(char* args[], int w_redirect, int r_redirect, char* write_file, char* read_file) {
-    // to add support to redirection (input/output)
-    int fd_out = 0, save_stdout, fd_in = 0, save_stdin;
-    if (w_redirect == 1) {
-        save_stdout = Write_Redirect(&fd_out, write_file);
-    } else if (w_redirect == 2) {
-        save_stdout = Append_Redirect(&fd_out, write_file);
-    }
-    if (r_redirect == 1)
-        save_stdin = Read_Redirect(&fd_in, read_file);
-
     // run in foreground
     pid_t pid = fork();
     if (pid < 0) {
@@ -43,10 +33,6 @@ void Run_FG(char* args[], int w_redirect, int r_redirect, char* write_file, char
     // parent has to wait for the child process to finish
     int status;
     wait(&status);
-
-    // making the fd of STDOUT to 1, STDIN to 0, if it has changed
-    Return_To_STDOUT(save_stdout, fd_out);
-    Return_To_STDIN(save_stdin, fd_in);
 
     return;
 }
@@ -61,17 +47,6 @@ void Run_BG(char* args[], int w_redirect, int r_redirect, char* write_file, char
     } else if (pid == 0) {
         // changing the process group so that process runs in the background
         setpgid(0, 0);
-
-        // to add support to redirection (input/output)
-        int fd_out = 0, save_stdout, fd_in = 0, save_stdin;
-        if (w_redirect == 1) {
-            save_stdout = Write_Redirect(&fd_out, write_file);
-        } else if (w_redirect == 2) {
-            save_stdout = Append_Redirect(&fd_out, write_file);
-        }
-        if (r_redirect == 1)
-            save_stdin = Read_Redirect(&fd_in, read_file);
-
         execvp(args[0], args);
 
         // Error message to be printed incase the command is invalid
@@ -121,22 +96,11 @@ void Pinfo(int pid, int w_redirect, char* write_file) {
     // edit the path if init_dir is present in it
     PathModifier(path);
 
-    // checking for possible redirection
-    int fd = 0, save_stdout;
-    if (w_redirect == 1) {
-        save_stdout = Write_Redirect(&fd, write_file);
-    } else if (w_redirect == 2) {
-        save_stdout = Append_Redirect(&fd, write_file);
-    }
-
     // print the required info
     printf("pid -- %d\n", pid);
     printf("Process Status -- %s\n", status);
     printf("Memory -- %d\n", vsize);  // conversion not really required
     printf("Executable Path -- %s\n", path);
-
-    // making the fd of STDOUT to 1 again if it has changed
-    Return_To_STDOUT(save_stdout, fd);
 
     return;
 }
