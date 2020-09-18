@@ -208,11 +208,15 @@ int Append_Redirect(int* fd, char* write_file) {
         return -1;
     }
     int save_stdout = dup(STDOUT_FILENO);
-    if (save_stdout < 0)
-        perror("Error ");
+    if (save_stdout < 0) {
+        perror("dup");
+        exit(EXIT_FAILURE);
+    }
     int return_val = dup2(*fd, STDOUT_FILENO);
-    if (return_val < 0)
-        perror("Error");
+    if (return_val < 0) {
+        perror("dup2");
+        exit(EXIT_FAILURE);
+    }
 
     return save_stdout;
 }
@@ -224,11 +228,15 @@ int Read_Redirect(int* fd, char* read_file) {
         return -1;
     }
     int save_stdin = dup(STDIN_FILENO);
-    if (save_stdin < 0)
-        perror("Error ");
+    if (save_stdin < 0) {
+        perror("dup");
+        exit(EXIT_FAILURE);
+    }
     int return_val = dup2(*fd, STDIN_FILENO);
-    if (return_val < 0)
-        perror("Error");
+    if (return_val < 0) {
+        perror("dup2");
+        exit(EXIT_FAILURE);
+    }
 
     return save_stdin;
 }
@@ -237,8 +245,10 @@ void Return_To_STDIN(int save_stdin, int fd) {
     if (fd > 0) {
         close(fd);
         int return_val = dup2(save_stdin, STDIN_FILENO);
-        if (return_val < 0)
-            perror("Error");
+        if (return_val < 0) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
         return;
     }
 }
@@ -247,8 +257,10 @@ void Return_To_STDOUT(int save_stdout, int fd) {
     if (fd > 0) {
         close(fd);
         int return_val = dup2(save_stdout, STDOUT_FILENO);
-        if (return_val < 0)
-            perror("Error");
+        if (return_val < 0) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
         return;
     }
 }
