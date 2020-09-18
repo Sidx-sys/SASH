@@ -88,7 +88,7 @@ void Run_FG_BG(char* input) {
 }
 
 // Function to implement the pinfo functionality
-void Pinfo(int pid) {
+void Pinfo(int pid, int w_redirect, char* write_file) {
     char file_name[MAX_LIMIT];
 
     // pid given to input will be shell's or some other process
@@ -125,11 +125,22 @@ void Pinfo(int pid) {
     // edit the path if init_dir is present in it
     PathModifier(path);
 
+    // checking for possible redirection
+    int fd = 0, save_stdout;
+    if (w_redirect == 1) {
+        save_stdout = Write_Redirect(&fd, write_file);
+    } else if (w_redirect == 2) {
+        save_stdout = Append_Redirect(&fd, write_file);
+    }
+
     // print the required info
     printf("pid -- %d\n", pid);
     printf("Process Status -- %s\n", status);
     printf("Memory -- %d\n", vsize);  // conversion not really required
     printf("Executable Path -- %s\n", path);
+
+    // making the fd of STDOUT to 1 again if it has changed
+    Return_To_STDOUT(save_stdout, fd);
 
     return;
 }

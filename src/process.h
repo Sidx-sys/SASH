@@ -2,7 +2,7 @@
 #define PROCESS_H
 
 void Run_FG_BG(char *);
-void Pinfo(int pid);
+void Pinfo(int, int, char *);
 void AddProcess(char *, int);
 void handler();
 

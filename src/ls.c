@@ -1,39 +1,45 @@
 #include "headers.h"
 
 // Function to parse the command "ls" with attributes and directories
-void FlagParser(char* cmd) {
+void FlagParser(char* args[], int w_redirect, char* write_file) {
     // array of strings to store directories
     char dirs[NUM_LIMIT][S_LIMIT];
     // flags related to the ls command
     int l_flag = 0, a_flag = 0, dir_freq = 0;
 
-    char* token = strtok(cmd, " ");
-    token = strtok(NULL, " ");
-
     // checking the case when only ls is given as input
-    if (token == NULL) {
+    if (args[1] == NULL) {
         Ls(".");
         return;
     }
+
     // processing the ls command
-    while (token != NULL) {
-        // printf("%s\n", token);
-        if (!strcmp(token, "-a"))
+    int i = 1;
+    while (args[i] != NULL) {
+        if (!strcmp(args[i], "-a"))
             a_flag = 1;
-        else if (!strcmp(token, "-l"))
+        else if (!strcmp(args[i], "-l"))
             l_flag = 1;
-        else if (!strcmp(token, "-la") || !strcmp(token, "-al"))
+        else if (!strcmp(args[i], "-la") || !strcmp(args[i], "-al"))
             a_flag = l_flag = 1;
         else {
-            strcpy(dirs[dir_freq], token);
+            strcpy(dirs[dir_freq], args[i]);
 
-            int len = strlen(token);
+            int len = strlen(args[i]);
             dirs[dir_freq][len] = '\0';
 
             ++dir_freq;
         }
-        token = strtok(NULL, " ");
+        i++;
     }
+    // checking for output redirection
+    int fd = 0, save_stdout;
+    if (w_redirect == 1) {
+        save_stdout = Write_Redirect(&fd, write_file);
+    } else if (w_redirect == 2) {
+        save_stdout = Append_Redirect(&fd, write_file);
+    }
+
     // case-wise execution of the command
     if (a_flag && l_flag) {
         // -l -a | -la | -al
@@ -89,6 +95,9 @@ void FlagParser(char* cmd) {
             Ls(dirs[0]);
         }
     }
+
+    // revert to STDOUT upon writing to file (if needed)
+    Return_To_STDOUT(save_stdout, fd);
 
     return;
 }

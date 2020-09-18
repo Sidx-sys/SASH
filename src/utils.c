@@ -18,9 +18,9 @@ void Prompt() {
     strcat(prompt, sysName);
 
     char cur_dir[MAX_LIMIT];
-    CurrentDirectory(cur_dir);
+    getcwd(cur_dir, MAX_LIMIT);
     if (init) {
-        CurrentDirectory(init_dir);
+        getcwd(init_dir, MAX_LIMIT);
         init = 0;
     }
 
@@ -78,41 +78,74 @@ int CLInput() {
 }
 
 int exec(char* cmd) {
+    // flags and attributes for redirection
+    char* args[S_LIMIT + 5] = {NULL};
+    int r_redirect = 0, w_redirect = 0, num_args = 0, r_file = S_LIMIT, w_file = S_LIMIT;
+    char *read_file = NULL, *write_file = NULL;
+
     // two strings to contain two copies of command
     char command[MAX_CMD_LIMIT];
     strcpy(command, cmd);
     // one copy to be tokenized for command identification another to send for execution
     char* token = strtok(cmd, " ");
 
+    // checking the input for *redirections*
+    while (token != NULL) {
+        args[num_args] = token;
+        if (!strcmp(token, ">")) {
+            w_redirect = 1;  // assuming that *>* is not used arbitrarily
+            w_file = num_args + 1;
+        } else if (!strcmp(token, ">>")) {
+            w_redirect = 2;  // assuming that *>* is not used arbitrarily
+            w_file = num_args + 1;
+        } else if (!strcmp(token, "<")) {
+            r_redirect++;
+            r_file = num_args + 1;
+        }
+        num_args++;
+        token = strtok(NULL, " ");
+    }
+
+    // technically blocking arguments after main command post flag, file fetching
+    read_file = args[r_file];
+    write_file = args[w_file];
+    args[w_file - 1] = NULL;
+    args[r_file - 1] = NULL;
+
     // checking for various commands
-    if (!strcmp(token, "exit")) {
+    if (!strcmp(args[0], "exit")) {
         printf("\033[0;35mBye!\033[0m\n");
         return -1;
-    } else if (!strcmp(token, "cd")) {
-        token = strtok(NULL, " ");
-        if (token == NULL)
+    } else if (!strcmp(args[0], "cd")) {
+        char* token_cmd = strtok(command, " ");
+        token_cmd = strtok(NULL, " ");
+        if (token_cmd == NULL)
+            ChangeDirectory("~");
+        else if (!strcmp(token_cmd, "<"))
             ChangeDirectory("~");
         else
-            ChangeDirectory(token);
-    } else if (!strcmp(token, "echo")) {
-        Echo(command);
-    } else if (!strcmp(token, "ls")) {
-        FlagParser(command);
-    } else if (!strcmp(token, "pwd")) {
-        char cur_dir[MAX_LIMIT];
-        CurrentDirectory(cur_dir);
-        printf("%s\n", cur_dir);
-    } else if (!strcmp(token, "clear")) {
+            ChangeDirectory(token_cmd);
+    } else if (!strcmp(args[0], "echo")) {
+        Echo(args, w_redirect, write_file);
+    } else if (!strcmp(args[0], "ls")) {
+        FlagParser(args, w_redirect, write_file);
+    } else if (!strcmp(args[0], "pwd")) {
+        CurrentDirectory(w_redirect, write_file);
+    } else if (!strcmp(args[0], "clear")) {
         printf("\033[2J");
         printf("\033[H");
-    } else if (!strcmp(token, "pinfo")) {
-        token = strtok(NULL, " ");
-        if (token == NULL) {
+    } else if (!strcmp(args[0], "pinfo")) {
+        char* token_cmd = strtok(command, " ");
+        token_cmd = strtok(NULL, " ");
+        if (token_cmd == NULL) {
             int pid = getpid();
-            Pinfo(pid);
+            Pinfo(pid, 0, NULL);
+        } else if (!strcmp(token_cmd, ">") || !strcmp(token_cmd, ">>")) {
+            int pid = getpid();
+            Pinfo(pid, w_redirect, write_file);
         } else {
-            int pid = atoi(token);
-            Pinfo(pid);
+            int pid = atoi(token_cmd);
+            Pinfo(pid, w_redirect, write_file);
         }
     } else {
         Run_FG_BG(command);
