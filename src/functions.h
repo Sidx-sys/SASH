@@ -15,6 +15,8 @@ void PathModifier(char *);
 void ReversePathModifier(char *);
 int Write_Redirect(int *, char *);
 int Append_Redirect(int *, char *);
+int Read_Redirect(int *, char *);
+void Return_To_STDIN(int, int);
 void Return_To_STDOUT(int, int);
 int max(int, int);
 

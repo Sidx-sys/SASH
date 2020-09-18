@@ -99,14 +99,25 @@ int exec(char* cmd) {
             w_redirect = 2;  // assuming that *>* is not used arbitrarily
             w_file = num_args + 1;
         } else if (!strcmp(token, "<")) {
-            r_redirect++;
+            r_redirect = 1;
             r_file = num_args + 1;
         }
         num_args++;
         token = strtok(NULL, " ");
     }
 
-    // technically blocking arguments after main command post flag, file fetching
+    // checking if the executable path (args[i] has ~) to account for paths relative to ~
+    char modified_name[MID_LIMIT];
+    for (int i = 0; i < num_args; i++) {
+        char modified_path[2 * MAX_LIMIT];
+        if (args[i][0] == '~') {
+            strcpy(modified_name, args[i] + 1);
+            sprintf(modified_path, "%s%s", init_dir, modified_name);
+            args[i] = modified_path;
+        }
+    }
+
+    // technically blocking arguments after main command post flag and file fetching
     read_file = args[r_file];
     write_file = args[w_file];
     args[w_file - 1] = NULL;
@@ -147,8 +158,11 @@ int exec(char* cmd) {
             int pid = atoi(token_cmd);
             Pinfo(pid, w_redirect, write_file);
         }
+    } else if (!strcmp(args[num_args - 1], "&")) {
+        args[num_args - 1] = NULL;
+        Run_BG(args, w_redirect, r_redirect, write_file, read_file);
     } else {
-        Run_FG_BG(command);
+        Run_FG(args, w_redirect, r_redirect, write_file, read_file);
     }
 
     return 0;

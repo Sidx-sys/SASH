@@ -20,71 +20,67 @@ void AddProcess(char* name, int pid) {
 }
 
 // Funtion to run a process
-void Run_FG_BG(char* input) {
-    // args for execvp
-    char* args[S_LIMIT] = {NULL};
-    // keeping a copy of command in case there is a "&" in the input
-    char bg_input[MAX_CMD_LIMIT], modified_name[MID_LIMIT];
-    strcpy(bg_input, input);
-
-    // tokeninzing and forming args
-    int num_args = 0;
-    char* token = strtok(input, " ");
-    while (token != NULL) {
-        args[num_args] = token;
-        num_args++;
-        token = strtok(NULL, " ");
+void Run_FG(char* args[], int w_redirect, int r_redirect, char* write_file, char* read_file) {
+    // to add support to redirection (input/output)
+    int fd_out = 0, save_stdout, fd_in = 0, save_stdin;
+    if (w_redirect == 1) {
+        save_stdout = Write_Redirect(&fd_out, write_file);
+    } else if (w_redirect == 2) {
+        save_stdout = Append_Redirect(&fd_out, write_file);
     }
+    if (r_redirect == 1)
+        save_stdin = Read_Redirect(&fd_in, read_file);
 
-    // checking if the executable path (args[i] has ~) to account for paths relative to ~
-    for (int i = 0; i < num_args; i++) {
-        char modified_path[2 * MAX_LIMIT];
-        if (args[i][0] == '~') {
-            strcpy(modified_name, args[i] + 1);
-            sprintf(modified_path, "%s%s", init_dir, modified_name);
-            args[i] = modified_path;
-        }
+    // run in foreground
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("Error while forking...\n");
+    } else if (pid == 0) {
+        execvp(args[0], args);
+        printf("Command not found: %s\n", args[0]);  // process exits abnormally
+        exit(1);
     }
+    // parent has to wait for the child process to finish
+    int status;
+    wait(&status);
 
-    // checking if the last part of args is "&" for background processes
-    if (!strcmp(args[num_args - 1], "&")) {
-        // have to run the process in background
-
-        // removing the & from args
-        args[num_args - 1] = NULL;
-
-        // creating a child process
-        pid_t pid = fork();
-        if (pid < 0) {
-            printf("Error while forking...\n");
-        } else if (pid == 0) {
-            // changing the process group so that process runs in the background
-            setpgid(0, 0);
-            execvp(args[0], args);
-
-            // Error message to be printed incase the command is invalid
-            printf("Command not found: %s\n", args[0]);  // !! not great error presentation
-            exit(1);
-        } else {
-            // adding the process to keep record
-            AddProcess(args[0], pid);
-        }
-    } else {
-        // run in foreground
-        pid_t pid = fork();
-        if (pid < 0) {
-            printf("Error while forking...\n");
-        } else if (pid == 0) {
-            execvp(args[0], args);
-            printf("Command not found: %s\n", args[0]);  // process exits abnormally
-            exit(1);
-        }
-        int status;
-        // parent has to wait for the child process to finish
-        wait(&status);
-    }
+    // making the fd of STDOUT to 1, STDIN to 0, if it has changed
+    Return_To_STDOUT(save_stdout, fd_out);
+    Return_To_STDIN(save_stdin, fd_in);
 
     return;
+}
+
+void Run_BG(char* args[], int w_redirect, int r_redirect, char* write_file, char* read_file) {
+    // have to run the process in background
+
+    // creating a child process
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("Error while forking...\n");
+    } else if (pid == 0) {
+        // changing the process group so that process runs in the background
+        setpgid(0, 0);
+
+        // to add support to redirection (input/output)
+        int fd_out = 0, save_stdout, fd_in = 0, save_stdin;
+        if (w_redirect == 1) {
+            save_stdout = Write_Redirect(&fd_out, write_file);
+        } else if (w_redirect == 2) {
+            save_stdout = Append_Redirect(&fd_out, write_file);
+        }
+        if (r_redirect == 1)
+            save_stdin = Read_Redirect(&fd_in, read_file);
+
+        execvp(args[0], args);
+
+        // Error message to be printed incase the command is invalid
+        printf("Command not found: %s\n", args[0]);  // !! not great error presentation
+        exit(1);
+    } else {
+        // adding the process to keep record
+        AddProcess(args[0], pid);
+    }
 }
 
 // Function to implement the pinfo functionality

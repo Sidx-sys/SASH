@@ -231,6 +231,25 @@ int Append_Redirect(int* fd, char* write_file) {
     return save_stdout;
 }
 
+int Read_Redirect(int* fd, char* read_file) {
+    *fd = open(read_file, O_RDONLY);
+    if (*fd == -1) {
+        printf("Error: file couldn't be created\n");
+        return -1;
+    }
+    int save_stdin = dup(STDIN_FILENO);
+    dup2(*fd, STDIN_FILENO);
+    return save_stdin;
+}
+
+void Return_To_STDIN(int save_stdin, int fd) {
+    if (fd > 0) {
+        close(fd);
+        dup2(save_stdin, STDIN_FILENO);
+        return;
+    }
+}
+
 void Return_To_STDOUT(int save_stdout, int fd) {
     if (fd > 0) {
         close(fd);
