@@ -191,13 +191,22 @@ int Total(char* name) {
 }
 
 int Write_Redirect(int* fd, char* write_file) {
-    *fd = open(write_file, O_WRONLY | O_CREAT, 0644);
+    *fd = open(write_file, O_WRONLY | O_TRUNC | O_CREAT, 0644);
     if (*fd == -1) {
         printf("Error: file couldn't be created\n");
         return -1;
     }
     int save_stdout = dup(STDOUT_FILENO);
-    dup2(*fd, STDOUT_FILENO);
+    if (save_stdout < 0) {
+        perror("dup");
+        exit(EXIT_FAILURE);
+    }
+    int return_val = dup2(*fd, STDOUT_FILENO);
+    if (return_val < 0) {
+        perror("dup2");
+        exit(EXIT_FAILURE);
+    }
+
     return save_stdout;
 }
 

@@ -43,14 +43,15 @@ int CLInput() {
     // preprocessing the command (removing additional spaces)
     NormalizeInput(input, normalized_input);
 
-    // Basic case handling of no inputs given
-    int INV_semicolons = 1;
+    // Basic case handling of no inputs given and checking existence of pipes
+    int INV_semicolons = 1, is_pipe = 0;
+
     for (int i = 0; i < MAX_CMD_LIMIT - 1; i++) {
         if (normalized_input[i] == '\0')
             break;
+        // To check if only semicolons is given as input
         else if (normalized_input[i] != ';' && normalized_input[i] != ' ')
             INV_semicolons = 0;
-        // To check if only semicolons is given as input
     }
     if (INV_semicolons) {
         printf("Invalid Input, ; is not a command\n");
@@ -68,7 +69,10 @@ int CLInput() {
 
     // executing each command recieved in an input
     for (int i = 0; i < num_cmd; i++) {
-        return_val = exec(cmd[i]);
+        is_pipe = piping(cmd[i]);
+        // exec here works only if there are no pipes in cmd[i]
+        if (!is_pipe)
+            return_val = exec(cmd[i]);
 
         // checking for the exit command
         if (return_val == -1)
@@ -221,4 +225,78 @@ void NormalizeInput(char* input, char* fine_input) {
     strcpy(fine_input, normalized_input);
 
     return;
+}
+
+// For handling piping in shell
+int piping(char* cmdline) {
+    char* args[S_LIMIT + 5] = {NULL};
+    int num_cmds = 0;
+
+    // dividing the cmdline to separate commands within pipes
+    char* token = strtok(cmdline, "|");
+    while (token != NULL) {
+        args[num_cmds] = token;
+        num_cmds++;
+        token = strtok(NULL, "|");
+    }
+
+    int num_pipes = num_cmds - 1;
+
+    // if no pipes do standard execution
+    if (num_pipes == 0)
+        return 0;
+
+    // defining the array to store all the pipes required
+    int pipes[2 * num_pipes];
+
+    // creating the pipes
+    for (int i = 0; i < num_pipes; i++) {
+        if (pipe(pipes + 2 * i) < 0) {
+            perror("pipe failed");
+            exit(EXIT_FAILURE);  // change it something normal
+        }
+    }
+
+    // creating processes for piping
+    int status, pid, j = 0;
+    for (int i = 0; i < num_cmds; i++) {
+        pid = fork();
+
+        if (pid < 0) {
+            perror("Error:");
+            return 1;
+        } else if (pid == 0) {
+            if (i < num_pipes) {  // if not the last command
+                if (dup2(pipes[j + 1], 1) < 0) {
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            if (i > 0) {  // if not the first command
+                if (dup2(pipes[j - 2], 0) < 0) {
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            // closing all the piping fds created
+            for (int k = 0; k < 2 * num_pipes; k++)
+                close(pipes[k]);
+
+            // executing single commands within pipe
+            exec(args[i]);
+            exit(EXIT_FAILURE);
+        }
+        j += 2;
+    }
+
+    // closing all the piping fds created
+    for (int i = 0; i < 2 * num_pipes; i++)
+        close(pipes[i]);
+
+    // waiting for all the child processes to end
+    for (int i = 0; i < num_cmds; i++)
+        wait(&status);
+
+    return 1;
 }

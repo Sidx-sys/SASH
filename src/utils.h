@@ -3,7 +3,8 @@
 
 void Prompt();
 int CLInput();
-void NormalizeInput(char*, char*);
-int exec(char*);
+void NormalizeInput(char *, char *);
+int exec(char *);
+int piping(char *);
 
 #endif
