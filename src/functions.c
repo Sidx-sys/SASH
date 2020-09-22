@@ -35,6 +35,21 @@ void Echo(char* args[]) {
     return;
 }
 
+void Setenv(char* args[]) {
+    if (args[1] == NULL || args[3] != NULL) {
+        printf("wrong arguments provided for setenv\ncommand format: setenv var [value]\n");
+        return;
+    }
+
+    // setting the environment variables using setenv
+    if (args[2] == NULL)
+        args[2] = "";
+    if (setenv(args[1], args[2], 1) < 0)
+        perror("setenv");
+
+    return;
+}
+
 // hepler function to implement ls -l and ls -la
 void Permissions(char* Name) {
     char perm[11];

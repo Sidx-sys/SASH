@@ -5,6 +5,7 @@ int ChangeDirectory(char *);
 int Total(char *);
 void CurrentDirectory();
 void Echo(char *[]);
+void Setenv(char *[]);
 void Permissions(char *);
 void User(char *, char *, int);
 void Group(char *, char *, int);
