@@ -3,8 +3,8 @@
 
 int ChangeDirectory(char *);
 int Total(char *);
-void CurrentDirectory(int, char *);
-void Echo(char *[], int, char *);
+void CurrentDirectory();
+void Echo(char *[]);
 void Permissions(char *);
 void User(char *, char *, int);
 void Group(char *, char *, int);

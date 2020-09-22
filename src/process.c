@@ -20,7 +20,7 @@ void AddProcess(char* name, int pid) {
 }
 
 // Funtion to run a process
-void Run_FG(char* args[], int w_redirect, int r_redirect, char* write_file, char* read_file) {
+void Run_FG(char* args[]) {
     // run in foreground
     pid_t pid = fork();
     if (pid < 0) {
@@ -37,7 +37,7 @@ void Run_FG(char* args[], int w_redirect, int r_redirect, char* write_file, char
     return;
 }
 
-void Run_BG(char* args[], int w_redirect, int r_redirect, char* write_file, char* read_file) {
+void Run_BG(char* args[]) {
     // have to run the process in background
 
     // creating a child process
@@ -59,7 +59,7 @@ void Run_BG(char* args[], int w_redirect, int r_redirect, char* write_file, char
 }
 
 // Function to implement the pinfo functionality
-void Pinfo(int pid, int w_redirect, char* write_file) {
+void Pinfo(int pid) {
     char file_name[MAX_LIMIT];
 
     // pid given to input will be shell's or some other process

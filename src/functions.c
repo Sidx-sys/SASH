@@ -18,7 +18,7 @@ int ChangeDirectory(char* path) {
 }
 
 // a helper function and also used in *pwd*
-void CurrentDirectory(int w_redirect, char* write_file) {
+void CurrentDirectory() {
     char cur_dir[MAX_LIMIT];
     getcwd(cur_dir, MAX_LIMIT);
     printf("%s\n", cur_dir);
@@ -27,7 +27,7 @@ void CurrentDirectory(int w_redirect, char* write_file) {
 }
 
 // function to implement echo
-void Echo(char* args[], int w_redirect, char* write_file) {
+void Echo(char* args[]) {
     for (int i = 1; args[i] != NULL; i++)
         printf("%s ", args[i]);
     printf("\n");

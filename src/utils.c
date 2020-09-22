@@ -150,17 +150,18 @@ int exec(char* cmd) {
         else if (!strcmp(token_cmd, "<") || !strcmp(token_cmd, ">") || !strcmp(token_cmd, ">>")) {
             ChangeDirectory("~");
             token_cmd = strtok(NULL, " ");
+            // just creating an empty file to replicate the reaction of BASH
             int fd = open(token_cmd, O_RDONLY | O_CREAT, 0644);
             if (fd == -1)
                 printf("Error: file couldn't be created\n");
         } else
             ChangeDirectory(token_cmd);
     } else if (!strcmp(args[0], "echo")) {
-        Echo(args, w_redirect, write_file);
+        Echo(args);
     } else if (!strcmp(args[0], "ls")) {
-        FlagParser(args, w_redirect, write_file);
+        FlagParser(args);
     } else if (!strcmp(args[0], "pwd")) {
-        CurrentDirectory(w_redirect, write_file);
+        CurrentDirectory();
     } else if (!strcmp(args[0], "clear")) {
         printf("\033[2J");
         printf("\033[H");
@@ -169,19 +170,19 @@ int exec(char* cmd) {
         token_cmd = strtok(NULL, " ");
         if (token_cmd == NULL) {
             int pid = getpid();
-            Pinfo(pid, 0, NULL);
+            Pinfo(pid);
         } else if (!strcmp(token_cmd, ">") || !strcmp(token_cmd, ">>")) {
             int pid = getpid();
-            Pinfo(pid, w_redirect, write_file);
+            Pinfo(pid);
         } else {
             int pid = atoi(token_cmd);
-            Pinfo(pid, w_redirect, write_file);
+            Pinfo(pid);
         }
     } else if (!strcmp(args[num_args - 1], "&")) {
         args[num_args - 1] = NULL;
-        Run_BG(args, w_redirect, r_redirect, write_file, read_file);
+        Run_BG(args);
     } else {
-        Run_FG(args, w_redirect, r_redirect, write_file, read_file);
+        Run_FG(args);
     }
 
     // making the fd of STDOUT to 1, STDIN to 0, if it has changed

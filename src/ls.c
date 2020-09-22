@@ -1,7 +1,7 @@
 #include "headers.h"
 
 // Function to parse the command "ls" with attributes and directories
-void FlagParser(char* args[], int w_redirect, char* write_file) {
+void FlagParser(char* args[]) {
     // array of strings to store directories
     char dirs[NUM_LIMIT][S_LIMIT];
     // flags related to the ls command
@@ -31,13 +31,6 @@ void FlagParser(char* args[], int w_redirect, char* write_file) {
             ++dir_freq;
         }
         i++;
-    }
-    // checking for output redirection
-    int fd = 0, save_stdout;
-    if (w_redirect == 1) {
-        save_stdout = Write_Redirect(&fd, write_file);
-    } else if (w_redirect == 2) {
-        save_stdout = Append_Redirect(&fd, write_file);
     }
 
     // case-wise execution of the command
@@ -95,9 +88,6 @@ void FlagParser(char* args[], int w_redirect, char* write_file) {
             Ls(dirs[0]);
         }
     }
-
-    // revert to STDOUT upon writing to file (if needed)
-    Return_To_STDOUT(save_stdout, fd);
 
     return;
 }
