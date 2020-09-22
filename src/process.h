@@ -8,5 +8,6 @@ void AddProcess(char *, int);
 int DeleteProcess(char *, int);
 void handler();
 void Jobs();
+void Kjob(char *[]);
 
 #endif

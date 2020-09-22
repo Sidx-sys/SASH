@@ -184,6 +184,8 @@ int exec(char* cmd) {
         Unsetenv(args);
     } else if (!strcmp(args[0], "jobs")) {
         Jobs();
+    } else if (!strcmp(args[0], "kjob")) {
+        Kjob(args);
     } else if (!strcmp(args[num_args - 1], "&")) {
         args[num_args - 1] = NULL;
         Run_BG(args);

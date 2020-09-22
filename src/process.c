@@ -188,3 +188,22 @@ void Jobs() {
 
     return;
 }
+
+void Kjob(char* args[]) {
+    // error handling related to arguments
+    if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
+        printf("Kjob: wrong input format: kjob <job number> <signal number>\n");
+        return;
+    }
+
+    // extracting the pid for the job number
+    int pid = pName[atoi(args[1]) - 1].pid;
+    int sig_no = atoi(args[2]);
+
+    // kill the process
+
+    if (kill(pid, sig_no) < 0)
+        perror("kill");
+
+    return;
+}
