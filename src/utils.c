@@ -180,6 +180,8 @@ int exec(char* cmd) {
         }
     } else if (!strcmp(args[0], "setenv")) {
         Setenv(args);
+    } else if (!strcmp(args[0], "unsetenv")) {
+        Unsetenv(args);
     } else if (!strcmp(args[num_args - 1], "&")) {
         args[num_args - 1] = NULL;
         Run_BG(args);
