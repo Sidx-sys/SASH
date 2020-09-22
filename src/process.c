@@ -105,6 +105,28 @@ void Pinfo(int pid) {
     return;
 }
 
+int DeleteProcess(char* progName, int pid) {
+    int found = 0;
+
+    // finding the Process name for the given program
+    for (int i = 0; i < pCounter; i++) {
+        if (pName[i].pid == pid) {
+            strcpy(progName, pName[i].name);
+            found = 1;
+        } else if (found) {
+            if (i < pCounter) {
+                strcpy(pName[i - 1].name, pName[i].name);
+                pName[i - 1].pid = pName[i].pid;
+            }
+            if (i == pCounter - 1) {
+                pName[i].pid = -2;
+            }
+        }
+    }
+
+    return found;
+}
+
 // Function to handle the SIGHLD signal
 void handler() {
     pid_t pid;
@@ -113,17 +135,14 @@ void handler() {
         // String to get the name of process with PID = pid
         char progName[MID_LIMIT];
 
-        // finding the Process name for the given programn
-        for (int i = 0; i < pCounter; i++) {
-            if (pName[i].pid == pid) {
-                strcpy(progName, pName[i].name);
-                pName[i].pid = -2;
-                found = 1;
-                break;
-            }
-        }
+        // deleting the process (if it exists)
+        found = DeleteProcess(progName, pid);
+
         // To prevent running for foreground processes => found
         if (found) {
+            // reduce the pCounter value
+            pCounter--;
+
             // print the required info
             char msg[MAX_LIMIT];
             if (status == 0)
@@ -133,6 +152,38 @@ void handler() {
 
             write(STDERR, msg, strlen(msg));  // printed in STDERR
         }
+    }
+
+    return;
+}
+
+void Jobs() {
+    if (pCounter == 0)
+        printf("No running background process\n");
+
+    char file_name[MAX_LIMIT];
+    for (int i = 0; i < pCounter; i++) {
+        sprintf(file_name, "/proc/%d/stat", pName[i].pid);
+        char status[NUM_LIMIT], stats[MAX_LIMIT];
+
+        // open the stat file for the status
+        int stat_file = open(file_name, O_RDONLY);
+        if (stat_file < 0) {
+            perror("Error");
+            return;
+        }
+        read(stat_file, stats, MAX_LIMIT);
+        char* token = strtok(stats, " ");
+        for (int i = 0; i < 2; i++)
+            token = strtok(NULL, " ");
+
+        // be sure of what to store
+        if (*token == 'T')
+            strcpy(status, "Stopped");
+        else
+            strcpy(status, "Running");
+
+        printf("[%d] %s %s [%d]\n", i + 1, status, pName[i].name, pName[i].pid);
     }
 
     return;
