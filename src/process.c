@@ -124,11 +124,14 @@ int DeleteProcess(char* progName, int pid) {
         }
     }
 
+    if (found)
+        pCounter--;
+
     return found;
 }
 
 // Function to handle the SIGHLD signal
-void handler() {
+void SIGCHLD_handler() {
     pid_t pid;
     int status, found = 0;
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -140,9 +143,6 @@ void handler() {
 
         // To prevent running for foreground processes => found
         if (found) {
-            // reduce the pCounter value
-            pCounter--;
-
             // print the required info
             char msg[MAX_LIMIT];
             if (status == 0)
@@ -201,7 +201,7 @@ void Kjob(char* args[]) {
 
     // error checking for process no.
     if (p_no >= pCounter) {
-        printf("kjob: invalid process number\n");
+        printf("kjob: invalid job number\n");
         return;
     }
     int pid = pName[atoi(args[1]) - 1].pid;
@@ -222,6 +222,59 @@ void Overkill() {
     }
 
     printf("Killed all background processes\n");
+
+    return;
+}
+
+void Fg(char* args[]) {
+    // error handling
+    if (args[2] != NULL) {
+        printf("fg: wrong input format -- fg <job number>\n");
+        return;
+    }
+
+    // getting process group of the shell
+    pid_t gpid_shell = getpgid(0), pid_shell = getpid();
+
+    // obtaining the pgid of the process to bring to foreground
+    int job_no = atoi(args[1]) - 1;
+    // error checking
+    if (job_no >= pCounter) {
+        printf("fg: invalid job number\n");
+        return;
+    }
+
+    // if process found, bring to fg and remove from jobs list
+    pid_t pid_bg = pName[job_no].pid;
+    pid_t gpid_bg = getpgid(pid_bg);
+    char temp[MAX_LIMIT];
+    // remove from jobs list
+    DeleteProcess(temp, pid_bg);
+
+    int status;
+
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);
+
+    // changing the process group to send the SIGCONT signal to
+    if (tcsetpgrp(0, gpid_bg) < 0) {
+        perror("fg");
+        return;
+    }
+
+    if (kill(pid_bg, SIGCONT) < 0)
+        perror("SIGCONT");
+
+    waitpid(pid_bg, &status, WUNTRACED);
+
+    // when foreground process ends give control back to shell
+    if (tcsetpgrp(0, gpid_shell) < 0) {
+        perror("fg");
+        exit(0);
+    }
+
+    signal(SIGTTIN, SIG_DFL);
+    signal(SIGTTOU, SIG_DFL);
 
     return;
 }

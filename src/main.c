@@ -9,7 +9,7 @@ int main() {
     int shell = 1;
     shell = CLInput();
     // Handling the exit of background child processes
-    signal(SIGCHLD, handler);
+    signal(SIGCHLD, SIGCHLD_handler);
     // To keep the shell working until exited
     while (shell != -1) {
         Prompt();
