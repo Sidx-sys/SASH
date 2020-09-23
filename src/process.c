@@ -197,10 +197,16 @@ void Kjob(char* args[]) {
     }
 
     // extracting the pid for the job number
-    int pid = pName[atoi(args[1]) - 1].pid;
-    int sig_no = atoi(args[2]);
+    int p_no = atoi(args[1]) - 1, sig_no = atoi(args[2]);
 
-    // kill the process
+    // error checking for process no.
+    if (p_no >= pCounter) {
+        printf("kjob: invalid process number\n");
+        return;
+    }
+    int pid = pName[atoi(args[1]) - 1].pid;
+
+    // send signal to the process
 
     if (kill(pid, sig_no) < 0)
         perror("kill");
