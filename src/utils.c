@@ -4,6 +4,8 @@
 char init_dir[MAX_LIMIT];
 int init = 1;
 
+extern char prompt_string[];
+
 // Function to print prompt
 void Prompt() {
     struct passwd* passwd;
@@ -28,7 +30,8 @@ void Prompt() {
     PathModifier(cur_dir);
 
     // Prompt display with ANSI color code
-    printf("\033[1;32m%s:\033[0m \033[1;36m%s\033[0m \033[1;32m>>\033[0m ", prompt, cur_dir);
+    sprintf(prompt_string, "\033[1;32m%s:\033[0m \033[1;36m%s\033[0m \033[1;32m>>\033[0m ", prompt, cur_dir);
+    printf("%s", prompt_string);
 }
 
 // Function to take input from shell
