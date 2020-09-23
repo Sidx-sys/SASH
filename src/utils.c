@@ -190,6 +190,8 @@ int exec(char* cmd) {
         Overkill();
     } else if (!strcmp(args[0], "fg")) {
         Fg(args);
+    } else if (!strcmp(args[0], "bg")) {
+        Bg(args);
     } else if (!strcmp(args[num_args - 1], "&")) {
         args[num_args - 1] = NULL;
         Run_BG(args);

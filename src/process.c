@@ -278,3 +278,27 @@ void Fg(char* args[]) {
 
     return;
 }
+
+void Bg(char* args[]) {
+    // error handling
+    if (args[2] != NULL) {
+        printf("fg: wrong input format -- fg <job number>\n");
+        return;
+    }
+
+    // obtaining the pgid of the process to bring to foreground
+    int job_no = atoi(args[1]) - 1;
+    // error checking
+    if (job_no >= pCounter) {
+        printf("fg: invalid job number\n");
+        return;
+    }
+
+    // if process found, obtain the group and process id
+    pid_t pid_bg = pName[job_no].pid;
+
+    if (kill(pid_bg, SIGCONT) < 0)
+        perror("SIGCONT");
+
+    return;
+}

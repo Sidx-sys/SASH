@@ -13,5 +13,6 @@ void Jobs();
 void Kjob(char *[]);
 void Overkill();
 void Fg(char *[]);
+void Bg(char *[]);
 
 #endif
