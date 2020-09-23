@@ -189,6 +189,18 @@ void Jobs() {
     return;
 }
 
+int IsNumber(char* arg) {
+    int len = strlen(arg);
+    int valid = 1;
+    for (int i = 0; i < len; i++) {
+        if ((int)(arg[i] - '0') < 0 || (int)(arg[i] - '0') > 9) {
+            valid = 0;
+            break;
+        }
+    }
+    return valid;
+}
+
 void Kjob(char* args[]) {
     // error handling related to arguments
     if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
@@ -230,6 +242,12 @@ void Fg(char* args[]) {
     // error handling
     if (args[2] != NULL) {
         printf("fg: wrong input format -- fg <job number>\n");
+        return;
+    }
+
+    int valid = IsNumber(args[1]);
+    if (!valid) {
+        printf("fg: invalid job number\n");
         return;
     }
 
@@ -283,6 +301,12 @@ void Bg(char* args[]) {
     // error handling
     if (args[2] != NULL) {
         printf("fg: wrong input format -- fg <job number>\n");
+        return;
+    }
+
+    int valid = IsNumber(args[1]);
+    if (!valid) {
+        printf("fg: invalid job number\n");
         return;
     }
 
