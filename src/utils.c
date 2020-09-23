@@ -4,6 +4,7 @@
 char init_dir[MAX_LIMIT];
 int init = 1;
 
+//ing to store the prompt string
 extern char prompt_string[];
 
 // Function to print prompt

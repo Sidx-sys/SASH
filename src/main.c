@@ -2,16 +2,17 @@
 
 char prompt_string[MAX_LIMIT];
 
-void sigIntHandler(int signum) {
-    write(1, "\n", 1);
-    write(1, prompt_string, strlen(prompt_string));
+void SigIntHandler(int signum) {
+    // print the prompt string again
+    write(STDOUT_FILENO, "\n", 1);
+    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
     return;
 }
 
 int main() {
     struct sigaction signalAction;
     memset(&signalAction, 0, sizeof(signalAction));
-    signalAction.sa_handler = sigIntHandler;
+    signalAction.sa_handler = SigIntHandler;
     signalAction.sa_flags = SA_RESTART;
     sigemptyset(&signalAction.sa_mask);
     // to handle SIGINT
