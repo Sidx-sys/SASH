@@ -39,7 +39,12 @@ int CLInput() {
     //Array of String pointers to store the different commands in the input
     char* cmd[MAX_LIMIT];
     // taking the command from shell
-    scanf("%[^\n]%*c", input);
+    int excd = scanf("%[^\n]%*c", input);
+
+    // exit on ctrl + d
+    if (excd == EOF)
+        exit(0);
+
     // preprocessing the command (removing additional spaces)
     NormalizeInput(input, normalized_input);
 
@@ -139,7 +144,7 @@ int exec(char* cmd) {
         save_stdin = Read_Redirect(&fd_in, read_file);
 
     // checking for various commands
-    if (!strcmp(args[0], "exit")) {
+    if (!strcmp(args[0], "exit") || !strcmp(args[0], "quit")) {
         printf("\033[0;35mBye!\033[0m\n");
         return -1;
     } else if (!strcmp(args[0], "cd")) {
