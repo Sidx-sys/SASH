@@ -213,3 +213,15 @@ void Kjob(char* args[]) {
 
     return;
 }
+
+void Overkill() {
+    // looping through all the active background processes and sending the SIGKILL signal
+    for (int i = 0; i < pCounter; i++) {
+        if (kill(pName[i].pid, 9) < 0)
+            perror("kill");
+    }
+
+    printf("Killed all background processes\n");
+
+    return;
+}

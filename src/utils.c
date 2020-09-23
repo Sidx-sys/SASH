@@ -186,6 +186,8 @@ int exec(char* cmd) {
         Jobs();
     } else if (!strcmp(args[0], "kjob")) {
         Kjob(args);
+    } else if (!strcmp(args[0], "overkill")) {
+        Overkill();
     } else if (!strcmp(args[num_args - 1], "&")) {
         args[num_args - 1] = NULL;
         Run_BG(args);

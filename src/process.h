@@ -9,5 +9,6 @@ int DeleteProcess(char *, int);
 void handler();
 void Jobs();
 void Kjob(char *[]);
+void Overkill();
 
 #endif
