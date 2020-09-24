@@ -3,6 +3,9 @@
 // using the global variable from utils.c
 extern char init_dir[MAX_LIMIT];
 
+// flag to keep check if there is any foreground process running
+extern int fg_running;
+
 // structure to store the background processes' name and pid
 struct procName {
     char name[S_LIMIT];
@@ -32,8 +35,13 @@ void Run_FG(char* args[]) {
     }
     // parent has to wait for the child process to finish
     int status;
+    // foreground process is running
+    fg_running = 1;
+
+    //  waiting the process to terminate or stop
     int res = waitpid(pid, &status, WUNTRACED);
     if (res > 0) {
+        // cheching if ctrl + z was pressed or not
         if (WIFSTOPPED(status)) {
             AddProcess(args[0], pid);
         }
@@ -274,6 +282,8 @@ void Fg(char* args[]) {
     char temp[MAX_LIMIT];
     // remove from jobs list
     DeleteProcess(temp, pid_bg);
+    // a process is running in foreground
+    fg_running = 1;
 
     int status;
 
@@ -291,6 +301,7 @@ void Fg(char* args[]) {
 
     int res = waitpid(pid_bg, &status, WUNTRACED);
     if (res > 0) {
+        // cheching if ctrl + z was pressed or not
         if (WIFSTOPPED(status)) {
             AddProcess(p_name, pid_bg);
         }

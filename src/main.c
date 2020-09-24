@@ -1,8 +1,15 @@
 #include "headers.h"
 
 char prompt_string[MAX_LIMIT];
+int fg_running;
 
 void SigIntHandler(int signum) {
+    if (fg_running) {
+        write(STDOUT_FILENO, "\n", 1);
+        fg_running = 0;
+        return;
+    }
+
     // print the prompt string again
     write(STDOUT_FILENO, "\n", 1);
     write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
@@ -10,11 +17,23 @@ void SigIntHandler(int signum) {
 }
 
 void SigTstpHandler(int signum) {
+    if (fg_running) {
+        write(STDOUT_FILENO, "\n", 1);
+        fg_running = 0;
+        return;
+    }
+
+    // print the prompt string again
     write(STDOUT_FILENO, "\n", 1);
+    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
+
     return;
 }
 
 int main() {
+    // no current foreground process in running
+    fg_running = 0;
+
     struct sigaction sigintAction, sigtstpAction;
     memset(&sigintAction, 0, sizeof(sigintAction));
     sigintAction.sa_handler = SigIntHandler;
