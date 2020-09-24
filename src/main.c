@@ -9,14 +9,26 @@ void SigIntHandler(int signum) {
     return;
 }
 
+void SigTstpHandler(int signum) {
+    write(STDOUT_FILENO, "\n", 1);
+    return;
+}
+
 int main() {
-    struct sigaction signalAction;
-    memset(&signalAction, 0, sizeof(signalAction));
-    signalAction.sa_handler = SigIntHandler;
-    signalAction.sa_flags = SA_RESTART;
-    sigemptyset(&signalAction.sa_mask);
+    struct sigaction sigintAction, sigtstpAction;
+    memset(&sigintAction, 0, sizeof(sigintAction));
+    sigintAction.sa_handler = SigIntHandler;
+    sigintAction.sa_flags = SA_RESTART;
+    sigemptyset(&sigintAction.sa_mask);
     // to handle SIGINT
-    sigaction(SIGINT, &signalAction, NULL);
+    sigaction(SIGINT, &sigintAction, NULL);
+
+    memset(&sigtstpAction, 0, sizeof(sigtstpAction));
+    sigtstpAction.sa_handler = SigTstpHandler;
+    sigtstpAction.sa_flags = SA_RESTART;
+    sigemptyset(&sigtstpAction.sa_mask);
+    // to handle SIGTSTP
+    sigaction(SIGTSTP, &sigtstpAction, NULL);
 
     // initializing the terminal
     printf("\033[0;31mStarting Up Shell...\033[0m\n");

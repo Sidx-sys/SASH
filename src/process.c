@@ -32,7 +32,12 @@ void Run_FG(char* args[]) {
     }
     // parent has to wait for the child process to finish
     int status;
-    wait(&status);
+    int res = waitpid(pid, &status, WUNTRACED);
+    if (res > 0) {
+        if (WIFSTOPPED(status)) {
+            AddProcess(args[0], pid);
+        }
+    }
 
     return;
 }
@@ -263,6 +268,7 @@ void Fg(char* args[]) {
     }
 
     // if process found, bring to fg and remove from jobs list
+    char* p_name = pName[job_no].name;
     pid_t pid_bg = pName[job_no].pid;
     pid_t gpid_bg = getpgid(pid_bg);
     char temp[MAX_LIMIT];
@@ -283,7 +289,12 @@ void Fg(char* args[]) {
     if (kill(pid_bg, SIGCONT) < 0)
         perror("SIGCONT");
 
-    waitpid(pid_bg, &status, WUNTRACED);
+    int res = waitpid(pid_bg, &status, WUNTRACED);
+    if (res > 0) {
+        if (WIFSTOPPED(status)) {
+            AddProcess(p_name, pid_bg);
+        }
+    }
 
     // when foreground process ends give control back to shell
     if (tcsetpgrp(0, gpid_shell) < 0) {
@@ -300,13 +311,13 @@ void Fg(char* args[]) {
 void Bg(char* args[]) {
     // error handling
     if (args[2] != NULL) {
-        printf("fg: wrong input format -- fg <job number>\n");
+        printf("bg: wrong input format -- fg <job number>\n");
         return;
     }
 
     int valid = IsNumber(args[1]);
     if (!valid) {
-        printf("fg: invalid job number\n");
+        printf("bg: invalid job number\n");
         return;
     }
 
@@ -314,7 +325,7 @@ void Bg(char* args[]) {
     int job_no = atoi(args[1]) - 1;
     // error checking
     if (job_no >= pCounter) {
-        printf("fg: invalid job number\n");
+        printf("bg: invalid job number\n");
         return;
     }
 
