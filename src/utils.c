@@ -39,15 +39,23 @@ void Prompt() {
 int CLInput() {
     int return_val;
     // strings to store the command and properly spaced command
-    char input[MAX_CMD_LIMIT], normalized_input[MAX_CMD_LIMIT];
+    char input[MAX_CMD_LIMIT] = {'\0'}, normalized_input[MAX_CMD_LIMIT] = {'\0'};
     //Array of String pointers to store the different commands in the input
-    char* cmd[MAX_LIMIT];
+    char* cmd[MAX_LIMIT] = {'\0'};
     // taking the command from shell
-    int excd = scanf("%[^\n]%*c", input);
+    char* eof = fgets(input, MAX_CMD_LIMIT, stdin);
+    int len_cmd = strlen(input);
 
-    // exit on ctrl + d
-    if (excd == EOF)
+    // to check for empty input
+    if (len_cmd == 1)
+        return 0;
+
+    // to check for ctrl + d
+    if (eof == NULL)
         exit(0);
+
+    // adjusting for a '\n' in the end appended by fgets
+    input[len_cmd - 1] = '\0';
 
     // preprocessing the command (removing additional spaces)
     NormalizeInput(input, normalized_input);
@@ -151,6 +159,8 @@ int exec(char* cmd) {
     if (!strcmp(args[0], "exit") || !strcmp(args[0], "quit")) {
         printf("\033[0;35mBye!\033[0m\n");
         return -1;
+    } else if (!strcmp(args[0], ";")) {
+        return 0;
     } else if (!strcmp(args[0], "cd")) {
         char* token_cmd = strtok(command, " ");
         token_cmd = strtok(NULL, " ");
