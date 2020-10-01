@@ -1,18 +1,21 @@
 #include "headers.h"
 
+// variable to check the exit status of last comaand executed
+int prev_stat;
 // string to store the directory from where shell is spawned (~)
 char init_dir[MAX_LIMIT];
 // string to store the just previous directory
 char prev_dir[MAX_LIMIT];
 int init = 1;
 
-//ing to store the prompt string
+// string to store the prompt string
 extern char prompt_string[];
 
 // Function to print prompt
 void Prompt() {
     struct passwd* passwd;
     char prompt[MAX_LIMIT];
+    int print_er = init;
 
     // retrieving user and system name
     passwd = getpwuid(getuid());
@@ -28,6 +31,7 @@ void Prompt() {
         // initializing global variables
         getcwd(init_dir, MAX_LIMIT);
         strcpy(prev_dir, "~");
+        prev_stat = 1;
         init = 0;
     }
 
@@ -35,8 +39,15 @@ void Prompt() {
     PathModifier(cur_dir);
 
     // Prompt display with ANSI color code
-    sprintf(prompt_string, "\033[1;32m%s:\033[0m \033[1;36m%s\033[0m \033[1;32m>>\033[0m ", prompt, cur_dir);
-    printf("%s", prompt_string);
+    sprintf(prompt_string, "\033[1;32m<%s:\033[0m \033[1;36m%s\033[0m \033[1;32m>>\033[0m ", prompt, cur_dir);
+    // printing with response to exit code
+    if (!print_er) {
+        if (prev_stat == 1)
+            printf("\033[0;32m:')\033[0m%s", prompt_string);
+        else if (prev_stat == 0)
+            printf("\033[0;31m:'(\033[0m%s", prompt_string);
+    } else
+        printf("%s", prompt_string);
 }
 
 // Function to take input from shell
@@ -108,6 +119,9 @@ int exec(char* cmd) {
     char* args[S_LIMIT + 5] = {NULL};
     int r_redirect = 0, w_redirect = 0, num_args = 0, r_file = S_LIMIT, w_file = S_LIMIT;
     char *read_file = NULL, *write_file = NULL;
+
+    // start of execution, prev_stat = 1, i.e let it be sucessful
+    prev_stat = 1;
 
     // two strings to contain two copies of command
     char command[MAX_CMD_LIMIT];
@@ -291,7 +305,8 @@ int piping(char* cmdline) {
     for (int i = 0; i < num_pipes; i++) {
         if (pipe(pipes + 2 * i) < 0) {
             perror("pipe failed");
-            exit(EXIT_FAILURE);  // change it something normal
+            prev_stat = 0;
+            return 0;
         }
     }
 
@@ -302,19 +317,22 @@ int piping(char* cmdline) {
 
         if (pid < 0) {
             perror("Error:");
+            prev_stat = 0;
             return 1;
         } else if (pid == 0) {
             if (i < num_pipes) {  // if not the last command
                 if (dup2(pipes[j + 1], 1) < 0) {
                     perror("dup2");
-                    exit(EXIT_FAILURE);
+                    prev_stat = 0;
+                    return 0;
                 }
             }
 
             if (i > 0) {  // if not the first command
                 if (dup2(pipes[j - 2], 0) < 0) {
                     perror("dup2");
-                    exit(EXIT_FAILURE);
+                    prev_stat = 0;
+                    return 0;
                 }
             }
             // closing all the piping fds created

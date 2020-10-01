@@ -1,7 +1,11 @@
 #include "headers.h"
 
+//ing to store the prompt string
+extern char prompt_string[];
+
 // using the global variable from utils.c
 extern char init_dir[MAX_LIMIT];
+extern int prev_stat;
 
 // flag to keep check if there is any foreground process running
 extern int fg_running;
@@ -31,6 +35,7 @@ void Run_FG(char* args[]) {
     } else if (pid == 0) {
         execvp(args[0], args);
         printf("Command not found: %s\n", args[0]);  // process exits abnormally
+        prev_stat = 0;
         exit(1);
     }
     // parent has to wait for the child process to finish
@@ -46,6 +51,9 @@ void Run_FG(char* args[]) {
             AddProcess(args[0], pid);
         }
     }
+
+    if (status > 0)
+        prev_stat = 0;
 
     return;
 }
@@ -64,6 +72,7 @@ void Run_BG(char* args[]) {
 
         // Error message to be printed incase the command is invalid
         printf("Command not found: %s\n", args[0]);  // !! not great error presentation
+        prev_stat = 0;
         exit(1);
     } else {
         // adding the process to keep record
@@ -86,6 +95,7 @@ void Pinfo(int pid) {
     int stat_file = open(file_name, O_RDONLY);
     if (stat_file < 0) {
         perror("Error");
+        prev_stat = 0;
         return;
     }
     // read from the stat file for the size and status
@@ -160,9 +170,10 @@ void SIGCHLD_handler() {
             char msg[MAX_LIMIT];
             if (status == 0)
                 sprintf(msg, "%s with pid %d exited normally\n", progName, pid);
-            else
+            else {
                 sprintf(msg, "%s with pid %d exited abnormally\n", progName, pid);
-
+                prev_stat = 0;
+            }
             write(STDERR, msg, strlen(msg));  // printed in STDERR
         }
     }
@@ -183,6 +194,7 @@ void Jobs() {
         int stat_file = open(file_name, O_RDONLY);
         if (stat_file < 0) {
             perror("Error");
+            prev_stat = 0;
             return;
         }
         read(stat_file, stats, MAX_LIMIT);
@@ -218,6 +230,7 @@ void Kjob(char* args[]) {
     // error handling related to arguments
     if (args[1] == NULL || args[2] == NULL || args[3] != NULL) {
         printf("Kjob: wrong input format: kjob <job number> <signal number>\n");
+        prev_stat = 0;
         return;
     }
 
@@ -227,14 +240,17 @@ void Kjob(char* args[]) {
     // error checking for process no.
     if (p_no >= pCounter) {
         printf("kjob: invalid job number\n");
+        prev_stat = 0;
         return;
     }
     int pid = pName[atoi(args[1]) - 1].pid;
 
     // send signal to the process
 
-    if (kill(pid, sig_no) < 0)
+    if (kill(pid, sig_no) < 0) {
         perror("kill");
+        prev_stat = 0;
+    }
 
     return;
 }
@@ -255,12 +271,14 @@ void Fg(char* args[]) {
     // error handling
     if (args[2] != NULL) {
         printf("fg: wrong input format -- fg <job number>\n");
+        prev_stat = 0;
         return;
     }
 
     int valid = IsNumber(args[1]);
     if (!valid) {
         printf("fg: invalid job number\n");
+        prev_stat = 0;
         return;
     }
 
@@ -272,6 +290,7 @@ void Fg(char* args[]) {
     // error checking
     if (job_no >= pCounter) {
         printf("fg: invalid job number\n");
+        prev_stat = 0;
         return;
     }
 
@@ -293,11 +312,14 @@ void Fg(char* args[]) {
     // changing the process group to send the SIGCONT signal to
     if (tcsetpgrp(0, gpid_bg) < 0) {
         perror("fg");
+        prev_stat = 0;
         return;
     }
 
-    if (kill(pid_bg, SIGCONT) < 0)
+    if (kill(pid_bg, SIGCONT) < 0) {
+        prev_stat = 0;
         perror("SIGCONT");
+    }
 
     int res = waitpid(pid_bg, &status, WUNTRACED);
     if (res > 0) {
@@ -310,6 +332,7 @@ void Fg(char* args[]) {
     // when foreground process ends give control back to shell
     if (tcsetpgrp(0, gpid_shell) < 0) {
         perror("fg");
+        prev_stat = 0;
         exit(0);
     }
 
@@ -323,12 +346,14 @@ void Bg(char* args[]) {
     // error handling
     if (args[2] != NULL) {
         printf("bg: wrong input format -- fg <job number>\n");
+        prev_stat = 0;
         return;
     }
 
     int valid = IsNumber(args[1]);
     if (!valid) {
         printf("bg: invalid job number\n");
+        prev_stat = 0;
         return;
     }
 
@@ -337,14 +362,17 @@ void Bg(char* args[]) {
     // error checking
     if (job_no >= pCounter) {
         printf("bg: invalid job number\n");
+        prev_stat = 0;
         return;
     }
 
     // if process found, obtain the group and process id
     pid_t pid_bg = pName[job_no].pid;
 
-    if (kill(pid_bg, SIGCONT) < 0)
+    if (kill(pid_bg, SIGCONT) < 0) {
         perror("SIGCONT");
+        prev_stat = 0;
+    }
 
     return;
 }

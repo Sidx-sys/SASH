@@ -4,28 +4,35 @@ char prompt_string[MAX_LIMIT];
 int fg_running;
 
 void SigIntHandler(int signum) {
+    char prompt_w_exit[MAX_LIMIT + 100];
+
     if (fg_running) {
         write(STDOUT_FILENO, "\n", 1);
         fg_running = 0;
         return;
     }
+    sprintf(prompt_w_exit, "\033[0;31m:'(\033[0m%s", prompt_string);
 
     // print the prompt string again
     write(STDOUT_FILENO, "\n", 1);
-    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
+    write(STDOUT_FILENO, prompt_w_exit, strlen(prompt_w_exit));
     return;
 }
 
 void SigTstpHandler(int signum) {
+    char prompt_w_exit[MAX_LIMIT + 100];
+
     if (fg_running) {
         write(STDOUT_FILENO, "\n", 1);
         fg_running = 0;
         return;
     }
 
+    sprintf(prompt_w_exit, "\033[0;31m:'(\033[0m%s", prompt_string);
+
     // print the prompt string again
     write(STDOUT_FILENO, "\n", 1);
-    write(STDOUT_FILENO, prompt_string, strlen(prompt_string));
+    write(STDOUT_FILENO, prompt_w_exit, strlen(prompt_w_exit));
 
     return;
 }

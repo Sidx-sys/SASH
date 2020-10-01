@@ -3,6 +3,7 @@
 // using the global variable from utils.c
 extern char init_dir[MAX_LIMIT];
 extern char prev_dir[MAX_LIMIT];
+extern int prev_stat;
 
 // Function to implement *cd*
 int ChangeDirectory(char* path) {
@@ -18,14 +19,18 @@ int ChangeDirectory(char* path) {
         printf("%s\n", prev_dir);
         // for getting back the actual usable path
         ReversePathModifier(prev_dir);
-        if (chdir(prev_dir) < 0)
+        if (chdir(prev_dir) < 0) {
             perror("cd");
+            prev_stat = 0;
+        }
     } else {
         ReversePathModifier(path);
 
         int r_value = chdir(path);
-        if (r_value == -1)
+        if (r_value == -1) {
             perror("cd");
+            prev_stat = 0;
+        }
     }
 
     // updating the previous directory
@@ -55,14 +60,17 @@ void Echo(char* args[]) {
 void Setenv(char* args[]) {
     if (args[1] == NULL || args[3] != NULL) {
         printf("wrong arguments provided for setenv\ncommand format: setenv var [value]\n");
+        prev_stat = 0;
         return;
     }
 
     // setting the environment variables using setenv
     if (args[2] == NULL)
         args[2] = "";
-    if (setenv(args[1], args[2], 1) < 0)
+    if (setenv(args[1], args[2], 1) < 0) {
         perror("setenv");
+        prev_stat = 0;
+    }
 
     return;
 }
@@ -70,11 +78,14 @@ void Setenv(char* args[]) {
 void Unsetenv(char* args[]) {
     if (args[1] == NULL || args[2] != NULL) {
         printf("wrong arguments provided for setenv\ncommand format: setenv var [value]\n");
+        prev_stat = 0;
         return;
     }
 
-    if (unsetenv(args[1]) < 1)
+    if (unsetenv(args[1]) < 1) {
         perror("unsetenv");
+        prev_stat = 0;
+    }
 
     return;
 }
@@ -99,6 +110,7 @@ void Permissions(char* Name) {
         printf("%s ", perm);
     } else {
         perror("Error");
+        prev_stat = 0;
     }
     return;
 }
@@ -118,6 +130,7 @@ void User(char* Name, char* return_arr, int len) {
         }
     } else {
         perror("Error");
+        prev_stat = 0;
     }
     return;
 }
@@ -137,6 +150,7 @@ void Group(char* Name, char* return_arr, int len) {
         }
     } else {
         perror("Error");
+        prev_stat = 0;
     }
     return;
 }
@@ -157,6 +171,7 @@ void Links(char* Name, char* return_arr, int len) {
         }
     } else {
         perror("Error");
+        prev_stat = 0;
     }
     return;
 }
@@ -177,6 +192,7 @@ void Size(char* Name, char* return_arr, int len) {
         }
     } else {
         perror("Error");
+        prev_stat = 0;
     }
     return;
 }
@@ -189,8 +205,10 @@ void LastAccessTime(char* Name) {
         strcpy(dtmy, asctime(localtime(&(st.st_ctime))));
         dtmy[strlen(dtmy) - 1] = '\0';
         printf("%s ", dtmy);
-    } else
+    } else {
         perror("Error");
+        prev_stat = 0;
+    }
     return;
 }
 
@@ -231,6 +249,7 @@ int Total(char* name) {
         return st.st_blocks;
     } else {
         perror("Error");
+        prev_stat = 0;
     }
 }
 
@@ -238,17 +257,20 @@ int Write_Redirect(int* fd, char* write_file) {
     *fd = open(write_file, O_WRONLY | O_TRUNC | O_CREAT, 0644);
     if (*fd == -1) {
         printf("Error: file couldn't be created\n");
+        prev_stat = 0;
         return -1;
     }
     int save_stdout = dup(STDOUT_FILENO);
     if (save_stdout < 0) {
         perror("dup");
-        exit(EXIT_FAILURE);
+        prev_stat = 0;
+        return -1;
     }
     int return_val = dup2(*fd, STDOUT_FILENO);
     if (return_val < 0) {
         perror("dup2");
-        exit(EXIT_FAILURE);
+        prev_stat = 0;
+        return -1;
     }
 
     return save_stdout;
@@ -258,17 +280,20 @@ int Append_Redirect(int* fd, char* write_file) {
     *fd = open(write_file, O_WRONLY | O_APPEND | O_CREAT, 0644);
     if (*fd == -1) {
         printf("Error: file couldn't be created\n");
+        prev_stat = 0;
         return -1;
     }
     int save_stdout = dup(STDOUT_FILENO);
     if (save_stdout < 0) {
         perror("dup");
-        exit(EXIT_FAILURE);
+        prev_stat = 0;
+        return -1;
     }
     int return_val = dup2(*fd, STDOUT_FILENO);
     if (return_val < 0) {
         perror("dup2");
-        exit(EXIT_FAILURE);
+        prev_stat = 0;
+        return -1;
     }
 
     return save_stdout;
@@ -300,8 +325,9 @@ void Return_To_STDIN(int save_stdin, int fd) {
         int return_val = dup2(save_stdin, STDIN_FILENO);
         if (return_val < 0) {
             perror("dup2");
-            exit(EXIT_FAILURE);
+            prev_stat = 0;
         }
+
         return;
     }
 }
@@ -312,8 +338,9 @@ void Return_To_STDOUT(int save_stdout, int fd) {
         int return_val = dup2(save_stdout, STDOUT_FILENO);
         if (return_val < 0) {
             perror("dup2");
-            exit(EXIT_FAILURE);
+            prev_stat = 0;
         }
+
         return;
     }
 }

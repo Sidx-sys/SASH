@@ -1,5 +1,7 @@
 #include "headers.h"
 
+extern int prev_stat;
+
 // Function to parse the command "ls" with attributes and directories
 void FlagParser(char* args[]) {
     // array of strings to store directories
@@ -94,6 +96,12 @@ void FlagParser(char* args[]) {
 
 // Output function for ls
 void Ls(char* path) {
+    if (path[0] = '-') {
+        printf("Invalid flag provided, only -l/-la/-al/-a supported\n");
+        prev_stat = 0;
+        return;
+    }
+
     ReversePathModifier(path);
 
     struct dirent* de;
@@ -101,6 +109,7 @@ void Ls(char* path) {
 
     if (dr == NULL) {
         printf("Could not open directory, wrong Address/Name\n");
+        prev_stat = 0;
         return;
     }
     while ((de = readdir(dr)) != NULL) {
@@ -120,6 +129,7 @@ void Ls_A(char* path) {
 
     if (dr == NULL) {
         printf("Could not open directory, wrong Address/Name\n");
+        prev_stat = 0;
         return;
     }
     while ((de = readdir(dr)) != NULL) {
@@ -138,6 +148,7 @@ void Ls_LA(char* path) {
 
     if (dr == NULL) {
         printf("Could not open directory, wrong Address/Name\n");
+        prev_stat = 0;
         return;
     }
     // array to have the correct name
@@ -205,6 +216,7 @@ void Ls_L(char* path) {
 
     if (dr == NULL) {
         printf("Could not open directory, wrong Address/Name\n");
+        prev_stat = 0;
         return;
     }
     // array to have the correct name
