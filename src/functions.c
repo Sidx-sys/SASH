@@ -2,19 +2,36 @@
 
 // using the global variable from utils.c
 extern char init_dir[MAX_LIMIT];
+extern char prev_dir[MAX_LIMIT];
 
 // Function to implement *cd*
 int ChangeDirectory(char* path) {
+    // to change prev_dir to directory just before the cd command executes
+    char temp_dir[MAX_LIMIT];
+    getcwd(temp_dir, MAX_LIMIT);
+
     if (!strcmp(path, "~")) {
         chdir(init_dir);
-        return 0;
-    }
-    ReversePathModifier(path);
+    } else if (!strcmp(path, "-")) {  // handling bonus specification of `cd -`
+        // for printing the path
+        PathModifier(prev_dir);
+        printf("%s\n", prev_dir);
+        // for getting back the actual usable path
+        ReversePathModifier(prev_dir);
+        if (chdir(prev_dir) < 0)
+            perror("cd");
+    } else {
+        ReversePathModifier(path);
 
-    int r_value = chdir(path);
-    if (r_value == -1)
-        perror("Error");
-    return r_value;
+        int r_value = chdir(path);
+        if (r_value == -1)
+            perror("cd");
+    }
+
+    // updating the previous directory
+    strcpy(prev_dir, temp_dir);
+
+    return 0;
 }
 
 // a helper function and also used in *pwd*

@@ -2,6 +2,8 @@
 
 // string to store the directory from where shell is spawned (~)
 char init_dir[MAX_LIMIT];
+// string to store the just previous directory
+char prev_dir[MAX_LIMIT];
 int init = 1;
 
 //ing to store the prompt string
@@ -23,7 +25,9 @@ void Prompt() {
     char cur_dir[MAX_LIMIT];
     getcwd(cur_dir, MAX_LIMIT);
     if (init) {
+        // initializing global variables
         getcwd(init_dir, MAX_LIMIT);
+        strcpy(prev_dir, "~");
         init = 0;
     }
 
