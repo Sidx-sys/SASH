@@ -96,7 +96,7 @@ void FlagParser(char* args[]) {
 
 // Output function for ls
 void Ls(char* path) {
-    if (path[0] = '-') {
+    if (path[0] == '-') {
         printf("Invalid flag provided, only -l/-la/-al/-a supported\n");
         prev_stat = 0;
         return;
