@@ -34,7 +34,7 @@ The Redirection is done inside the `Exec` function and the `piping()` function s
 - quit => Implemented in the `utils.c` file and while taking input for `ctrl + D`
   
 ### 5. Signal Handling
-The two signals were a handled in the `main.c` file in the `SigTstpHandler` and the `SigIntHandler` using the `Sigaction` structure.
+- The two signals were handled in the `main.c` file in the `SigTstpHandler` and the `SigIntHandler` using the `Sigaction` structure.
 ---
 
 ## Bonus Features
